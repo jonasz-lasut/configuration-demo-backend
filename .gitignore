@@ -6,3 +6,5 @@
 
 *.xpkg
 kubeconfig
+
+target/

@@ -1,0 +1,23 @@
+set shell := ["bash", "-c"]
+
+pg_container := "todo-postgres"
+
+pg_db := "upbound"
+pg_user := "todo"
+pg_password := "secretpass"
+
+setup_db:
+  #!/usr/bin/env bash
+  docker run --name {{ pg_container }} -e POSTGRES_PASSWORD={{ pg_password }} -e POSTGRES_USER={{ pg_user }} -e POSTGRES_DB={{ pg_db }} -p 5432:5432 --rm -itd postgres:16
+  sleep 10
+  docker exec -it {{ pg_container }} psql -U {{ pg_user }} -d {{ pg_db }} -c "CREATE TABLE IF NOT EXISTS todos (id SERIAL PRIMARY KEY, note VARCHAR(255) NOT NULL, done BOOLEAN NOT NULL DEFAULT false);"
+
+connect_db:
+  docker exec -it {{ pg_container }} psql -U {{ pg_user }} -d {{ pg_db }}
+
+teardown_db:
+  if docker ps | grep -q {{ pg_container }}; then docker stop {{ pg_container }}; fi
+
+start_api:
+  POSTGRES_HOST=127.0.0.1 POSTGRES_DB={{ pg_db }} POSTGRES_USER={{ pg_user }} POSTGRES_PASSWORD={{ pg_password }} cargo run
+

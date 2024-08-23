@@ -1,0 +1,27 @@
+apiVersion: meta.pkg.crossplane.io/v1
+kind: Configuration
+metadata:
+  name: configuration-demo-backend
+  annotations:
+    meta.crossplane.io/maintainer: Jonasz Lasut-Balcerzak <jonasz.lasut@gmail.com>
+    meta.crossplane.io/source: github.com/jonasz-lasut/configuration-demo-backend
+    meta.crossplane.io/license: Apache-2.0
+    meta.crossplane.io/description: |
+      Demo backend configuration with CloudSQL, external secrets and declarative schema mgmt.
+    meta.crossplane.io/readme: |
+      Demo backend configuration with CloudSQL, external secrets and declarative schema mgmt.
+spec:
+  crossplane:
+    version: ">=v1.14.1-0"
+  dependsOn:
+    - provider: xpkg.upbound.io/crossplane-contrib/provider-kubernetes
+      # renovate: datasource=github-releases depName=crossplane-contrib/provider-kubernetes
+      version: ">=v0.12.1"
+    - function: xpkg.upbound.io/crossplane-contrib/function-patch-and-transform
+      # renovate: datasource=github-releases depName=crossplane-contrib/function-patch-and-transform
+      version: ">=v0.4.0"
+    - configuration: xpkg.upbound.io/upbound/configuration-gcp-database
+      version: ">=v0.5.0"
+    - function: xpkg.upbound.io/crossplane-contrib/function-go-templating
+      # renovate: datasource=github-releases depName=crossplane-contrib/function-go-templating
+      version: ">=v0.5.0"

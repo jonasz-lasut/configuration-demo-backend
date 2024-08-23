@@ -1,0 +1,32 @@
+apiVersion: application.jlasut.io/v1alpha1
+kind: DemoBackend
+metadata:
+  namespace: default
+  name: demo-backend
+spec:
+  providerConfigName: provider-example
+  deletionPolicy: Delete
+  backend: {}
+  database:
+    postgresParameters:
+      name: demo-postgres
+      region: europe-central2
+      network: <vpc-network>
+      externalSecret: postgres-password
+    databaseSchemas:
+    - name: default-schema
+      sql: |
+        create table users (
+          id int not null auto_increment,
+          name varchar(255) not null,
+          email varchar(255) unique not null,
+          primary key (id)
+        );
+  secrets: 
+    secretStoreName: external-secret-store
+    externalSecrets:
+    - fromSecret: external-secret
+      toSecret: local-secret
+      version: latest
+
+

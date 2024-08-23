@@ -1,0 +1,131 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: XDemoBackends.application.jlasut.io
+spec:
+  group: application.jlasut.io
+  names:
+    kind: XDemoBackend
+    plural: XDemoBackends
+  claimNames:
+    kind: DemoBackend
+    plural: demobackend
+  versions:
+    - name: v1alpha1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              description: Backend Application configuration parameters
+              properties:
+                providerConfigName:
+                  type: string
+                  description: Crossplane ProviderConfig to use for provisioning this resources
+                deletionPolicy:
+                  description: Delete the external resources when the Claim/XR is deleted. Defaults to Delete
+                  enum:
+                    - Delete
+                    - Orphan
+                  type: string
+                  default: Delete
+                backend:
+                  type: object
+                  description: Backend configuration
+                  properties:
+                    placeholder:
+                      type: string
+                  required:
+                    - placeholder
+                database:
+                  type: object
+                  description: Database configuration
+                  properties:
+                    postgresParameters:
+                      type: object
+                      properties:
+                        externalSecret:
+                          type: string
+                          description: External secret name which holds root password, latest version
+                        name:
+                          type: string
+                        network:
+                          type: string
+                          description: VPC network name
+                        region:
+                          type: string
+                          default: europe-central2 #TODO; check
+                      required:
+                        - externalSecret
+                        - name
+                        - network
+                    databaseSchemas:
+                      type: array
+                      description: Database schemas to create for the application
+                      default: []
+                      items:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                            description: Schema name
+                          sql:
+                            type: string
+                            description: SQL code of the schema
+                        required:
+                          - name
+                          - sql
+                  required:
+                  - postgresParameters
+                  - databaseSchemas
+                secrets:
+                  type: object
+                  properties:
+                    secretStoreName:
+                      type: string
+                      description: Secret store to be used to pull secret
+                      default: ""
+                    externalSecrets:
+                      type: array
+                      description: External secrets from the secrets store to be mounted as env
+                      default: []
+                      items:
+                        type: object
+                        properties:
+                          fromSecret:
+                            type: string
+                            description: The name or the key of secret in the external secret store
+                          toSecret:
+                            type: string
+                            description: The name of the secret
+                          metadata:
+                            type: object
+                            description: Additional annotations and labels for the secret
+                            properties:
+                              annotations:
+                                type: object
+                                additionalProperties:
+                                  type: string
+                              labels:
+                                type: object
+                                additionalProperties:
+                                  type: string
+                            default: {}
+                          version:
+                            type: string
+                            default: latest
+                        required:
+                          - fromSecret
+                          - toSecret
+                      required:
+                        - secretStoreName
+                        - externalSecrets
+              required:
+                - providerConfigName
+                - deletionPolicy
+                - backend
+                - database
+                - secrets

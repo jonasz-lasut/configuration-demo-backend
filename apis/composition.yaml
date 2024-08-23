@@ -1,0 +1,194 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: XDemoBackend.application.jlasut.io
+spec:
+  compositeTypeRef:
+    apiVersion: application.jlasut.io/v1alpha1
+    kind: XDemoBackend
+  mode: Pipeline
+  pipeline:
+    - functionRef:
+        name: crossplane-contrib-function-go-templating
+      step: create-external-secrets
+      input:
+        apiVersion: gotemplating.fn.crossplane.io/v1beta1
+        kind: GoTemplate
+        source: Inline
+        inline:
+          template: |
+            {{ $ocr := .observed.composite.resource }}
+            {{ range .observed.composite.resource.spec.parameters.secrets.externalSecrets }}
+            ---
+            apiVersion: kubernetes.crossplane.io/v1alpha2
+            kind: Object
+            metadata:
+              name: '{{ .toSecret }}-secret'
+              labels: {{ toYaml $ocr.metadata.labels | nindent 4 }}
+              annotations:
+                crossplane.io/external-name: '{{ .toSecret }}'
+                gotemplating.fn.crossplane.io/composition-resource-name: '{{ .toSecret }}-secret'
+            spec:
+              providerConfigRef:
+                name: {{ $ocr.spec.parameters.providerConfigName }}
+              forProvider:
+                manifest:
+                  apiVersion: external-secrets.io/v1alpha1
+                  kind: ExternalSecret
+                  metadata:
+                    name: '{{ .toSecret }}'
+                    labels: {{ toYaml $ocr.metadata.labels | nindent 10 }}
+                    namespace: '{{ $ocr.metadata.namespace }}'
+                  spec:
+                    refreshInterval: "1h"
+                    secretStoreRef:
+                      kind: ClusterSecretStore
+                      name: '{{ $ocr.spec.parameters.secrets.secretStoreName }}'
+                    target:
+                      name: '{{ .toSecret }}'
+                      creationPolicy: Owner
+                      template:
+                        {{ if .metadata }}
+                        metadata: {{ toYaml .metadata | nindent 14 }}
+                        {{ end }}
+                        type: Opaque
+                    dataFrom:
+                      - key: '{{ .fromSecret }}'
+                        version: '{{ .version }}'
+            {{ end }}
+    - functionRef:
+        name: crossplane-contrib-function-go-templating
+      step: create-cloudsql-postgres
+      input:
+        apiVersion: gotemplating.fn.crossplane.io/v1beta1
+        kind: GoTemplate
+        source: Inline
+        inline:
+          template: |
+            {{ $ocr := .observed.composite.resource }}
+            {{ $postgres := .observed.composite.resource.spec.parameters.database.postgresParameters }}
+            ---
+            apiVersion: kubernetes.crossplane.io/v1alpha2
+            kind: Object
+            metadata:
+              name: '{{ $postgres.externalSecret }}'
+              labels: {{ toYaml $ocr.metadata.labels | nindent 4 }}
+              annotations:
+                crossplane.io/external-name: '{{ $postgres.externalSecret }}'
+                gotemplating.fn.crossplane.io/composition-resource-name: '{{ $postgres.externalSecret }}'
+            spec:
+              providerConfigRef:
+                name: {{ $ocr.spec.parameters.providerConfigName }}
+              forProvider:
+                manifest:
+                  apiVersion: external-secrets.io/v1alpha1
+                  kind: ExternalSecret
+                  metadata:
+                    name: '{{ $postgres.externalSecret }}'
+                    labels: {{ toYaml $ocr.metadata.labels | nindent 10 }}
+                    namespace: '{{ $ocr.metadata.namespace }}'
+                  spec:
+                    refreshInterval: "1h"
+                    secretStoreRef:
+                      kind: ClusterSecretStore
+                      name: '{{ $ocr.spec.parameters.secrets.secretStoreName }}'
+                    target:
+                      name: '{{ $postgres.externalSecret }}'
+                      creationPolicy: Owner
+                      template:
+                        type: Opaque
+                    dataFrom:
+                      - key: '{{ $postgres.externalSecret }}'
+                        version: latest
+            ---
+            apiVersion: kubernetes.crossplane.io/v1alpha2
+            kind: Object
+            metadata:
+              name: '{{ $postgres.name }}'
+              labels: {{ toYaml $ocr.metadata.labels | nindent 4 }}
+              annotations:
+                crossplane.io/external-name: '{{ $postgres.name }}'
+                gotemplating.fn.crossplane.io/composition-resource-name: '{{ $postgres.name }}-postgres'
+            spec:
+              providerConfigRef:
+                name: {{ $ocr.spec.parameters.providerConfigName }}
+              forProvider:
+                manifest:
+                  apiVersion: gcp.platform.upbound.io/v1alpha1
+                  kind: SQLInstance
+                  metadata:
+                    name: '{{ $postgres.name }}'
+                    labels: {{ toYaml $ocr.metadata.labels | nindent 10 }}
+                    namespace: '{{ $ocr.metadata.namespace }}'
+                  spec:
+                    parameters:
+                      engine: postgres
+                      engineVersion: "13"
+                      region: '{{ $postgres.region }}'
+                      storageGB: 10
+                      passwordSecretRef:
+                        namespace: '{{ $ocr.metadata.namespace }}'
+                        name: '{{ $postgres.externalSecret }}'
+                        key: password
+                      networkRef:
+                        id: '{{ $postgres.network }}'
+                      providerConfigName: {{ $ocr.spec.parameters.providerConfigName }}
+                    writeConnectionSecretToRef:
+                      name: '{{ $postgres.name }}-connection'
+                      namespace: '{{ $ocr.metadata.namespace }}'
+    - functionRef:
+        name: crossplane-contrib-function-go-templating
+      step: create-database-schema
+      input:
+        apiVersion: gotemplating.fn.crossplane.io/v1beta1
+        kind: GoTemplate
+        source: Inline
+        inline:
+          template: |
+            {{ $ocr := .observed.composite.resource }}
+            {{ $postgresConnectionSecret := .observed.composite.resource.spec.parameters.database.postgresParameters.name }}
+            {{ range .observed.composite.resource.spec.parameters.database.databaseSchemas }}
+            ---
+            apiVersion: kubernetes.crossplane.io/v1alpha2
+            kind: Object
+            metadata:
+              name: '{{ .name }}'
+              labels: {{ toYaml $ocr.metadata.labels | nindent 4 }}
+              annotations:
+                crossplane.io/external-name: '{{ .name }}'
+                gotemplating.fn.crossplane.io/composition-resource-name: '{{ .name }}'
+            spec:
+              providerConfigRef:
+                name: {{ $ocr.spec.parameters.providerConfigName }}
+              forProvider:
+                manifest:
+                  apiVersion: db.atlasgo.io/v1alpha1
+                  kind: AtlasSchema
+                  metadata:
+                    name: '{{ .name }}'
+                  spec:
+                    credentials:
+                      scheme: postgres
+                      hostFrom:
+                        secretKeyRef:
+                          key: host
+                          name: '{{ $postgresConnectionSecret }}-connection'
+                      userFrom:
+                        secretKeyRef:
+                          key: user
+                          name: '{{ $postgresConnectionSecret }}-connection'
+                      passwordFrom:
+                        secretKeyRef:
+                          key: password
+                          name: '{{ $postgresConnectionSecret }}-connection'
+                      database: upbound #TODO: check if valid
+                      port: 5432
+                      parameters:
+                        sslmode: disable
+                    schema:
+                      sql: {{ .sql }}
+                    policy:
+                      lint:
+                        destructive:
+                          error: true
+            {{ end }}

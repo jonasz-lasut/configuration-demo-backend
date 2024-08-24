@@ -8,3 +8,4 @@
 kubeconfig
 
 target/
+node_modules/

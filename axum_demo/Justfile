@@ -10,9 +10,9 @@ setup_db:
   #!/usr/bin/env bash
   docker run --name {{ pg_container }} -e POSTGRES_PASSWORD={{ pg_password }} -e POSTGRES_USER={{ pg_user }} -e POSTGRES_DB={{ pg_db }} -p 5432:5432 --rm -itd postgres:16
   sleep 10
-  docker exec -it {{ pg_container }} psql -U {{ pg_user }} -d {{ pg_db }} -c "CREATE TABLE IF NOT EXISTS todos (id SERIAL PRIMARY KEY, note VARCHAR(255) NOT NULL, done BOOLEAN NOT NULL DEFAULT false);"
+  docker exec -it {{ pg_container }} psql -U {{ pg_user }} -d {{ pg_db }} -c "CREATE TABLE IF NOT EXISTS todos (id SERIAL PRIMARY KEY, note VARCHAR(255) NOT NULL, status BOOLEAN NOT NULL DEFAULT false);"
 
-connect_db:
+_connect_db:
   docker exec -it {{ pg_container }} psql -U {{ pg_user }} -d {{ pg_db }}
 
 teardown_db:
@@ -21,3 +21,11 @@ teardown_db:
 start_api:
   POSTGRES_HOST=127.0.0.1 POSTGRES_DB={{ pg_db }} POSTGRES_USER={{ pg_user }} POSTGRES_PASSWORD={{ pg_password }} cargo run
 
+generate_css:
+  #!/usr/bin/env bash
+  cd tailwind
+  npm run build-css
+
+run: generate_css start_api
+
+setup: setup_db run

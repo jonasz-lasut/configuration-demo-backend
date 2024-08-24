@@ -1,10 +1,11 @@
 set shell := ["bash", "-c"]
 
 pg_container := "todo-postgres"
-
 pg_db := "upbound"
 pg_user := "todo"
 pg_password := "secretpass"
+
+oci_image := "ttl.sh/axum_demo_todo:6h"
 
 setup_db:
   #!/usr/bin/env bash
@@ -25,6 +26,12 @@ generate_css:
   #!/usr/bin/env bash
   cd tailwind
   npm run build-css
+
+build_container_image: generate_css
+  pack build {{ oci_image }}
+
+demo_image: build_container_image
+  docker push {{ oci_image }}
 
 run: generate_css start_api
 

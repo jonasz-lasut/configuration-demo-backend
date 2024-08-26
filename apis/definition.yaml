@@ -6,10 +6,10 @@ spec:
   group: application.jlasut.io
   names:
     kind: XDemoBackend
-    plural: XDemoBackends
+    plural: xdemobackends
   claimNames:
     kind: DemoBackend
-    plural: demobackend
+    plural: demobackends
   versions:
     - name: v1alpha1
       served: true

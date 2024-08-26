@@ -18,7 +18,7 @@ spec:
         inline:
           template: |
             {{ $ocr := .observed.composite.resource }}
-            {{ range .observed.composite.resource.spec.parameters.secrets.externalSecrets }}
+            {{ range .observed.composite.resource.spec.secrets.externalSecrets }}
             ---
             apiVersion: kubernetes.crossplane.io/v1alpha2
             kind: Object
@@ -30,7 +30,7 @@ spec:
                 gotemplating.fn.crossplane.io/composition-resource-name: '{{ .toSecret }}-secret'
             spec:
               providerConfigRef:
-                name: {{ $ocr.spec.parameters.providerConfigName }}
+                name: {{ $ocr.spec.providerConfigName }}
               forProvider:
                 manifest:
                   apiVersion: external-secrets.io/v1alpha1
@@ -43,7 +43,7 @@ spec:
                     refreshInterval: "1h"
                     secretStoreRef:
                       kind: ClusterSecretStore
-                      name: '{{ $ocr.spec.parameters.secrets.secretStoreName }}'
+                      name: '{{ $ocr.spec.secrets.secretStoreName }}'
                     target:
                       name: '{{ .toSecret }}'
                       creationPolicy: Owner
@@ -66,32 +66,32 @@ spec:
         inline:
           template: |
             {{ $ocr := .observed.composite.resource }}
-            {{ $postgres := .observed.composite.resource.spec.parameters.database.postgresParameters }}
+            {{ $postgres := .observed.composite.resource.spec.database.postgresParameters }}
             ---
             apiVersion: kubernetes.crossplane.io/v1alpha2
             kind: Object
             metadata:
               name: '{{ $postgres.externalSecret }}'
               labels: {{ toYaml $ocr.metadata.labels | nindent 4 }}
-              annotations:
+              annotations: {{ toYaml $ocr.metadata.annotations | nindent 4 }}
                 crossplane.io/external-name: '{{ $postgres.externalSecret }}'
                 gotemplating.fn.crossplane.io/composition-resource-name: '{{ $postgres.externalSecret }}'
             spec:
               providerConfigRef:
-                name: {{ $ocr.spec.parameters.providerConfigName }}
+                name: {{ $ocr.spec.providerConfigName }}
               forProvider:
                 manifest:
                   apiVersion: external-secrets.io/v1alpha1
                   kind: ExternalSecret
                   metadata:
                     name: '{{ $postgres.externalSecret }}'
-                    labels: {{ toYaml $ocr.metadata.labels | nindent 10 }}
                     namespace: '{{ $ocr.metadata.namespace }}'
+                    annotations: {{ toYaml $ocr.metadata.annotations | nindent 10 }}
                   spec:
                     refreshInterval: "1h"
                     secretStoreRef:
                       kind: ClusterSecretStore
-                      name: '{{ $ocr.spec.parameters.secrets.secretStoreName }}'
+                      name: '{{ $ocr.spec.secrets.secretStoreName }}'
                     target:
                       name: '{{ $postgres.externalSecret }}'
                       creationPolicy: Owner
@@ -106,20 +106,20 @@ spec:
             metadata:
               name: '{{ $postgres.name }}'
               labels: {{ toYaml $ocr.metadata.labels | nindent 4 }}
-              annotations:
+              annotations: {{ toYaml $ocr.metadata.annotations | nindent 4 }}
                 crossplane.io/external-name: '{{ $postgres.name }}'
                 gotemplating.fn.crossplane.io/composition-resource-name: '{{ $postgres.name }}-postgres'
             spec:
               providerConfigRef:
-                name: {{ $ocr.spec.parameters.providerConfigName }}
+                name: {{ $ocr.spec.providerConfigName }}
               forProvider:
                 manifest:
                   apiVersion: gcp.platform.upbound.io/v1alpha1
                   kind: SQLInstance
                   metadata:
                     name: '{{ $postgres.name }}'
-                    labels: {{ toYaml $ocr.metadata.labels | nindent 10 }}
                     namespace: '{{ $ocr.metadata.namespace }}'
+                    annotations: {{ toYaml $ocr.metadata.annotations | nindent 10 }}
                   spec:
                     parameters:
                       engine: postgres
@@ -132,7 +132,7 @@ spec:
                         key: password
                       networkRef:
                         id: '{{ $postgres.network }}'
-                      providerConfigName: {{ $ocr.spec.parameters.providerConfigName }}
+                      providerConfigName: {{ $ocr.spec.providerConfigName }}
                     writeConnectionSecretToRef:
                       name: '{{ $postgres.name }}-connection'
                       namespace: '{{ $ocr.metadata.namespace }}'
@@ -146,26 +146,28 @@ spec:
         inline:
           template: |
             {{ $ocr := .observed.composite.resource }}
-            {{ $postgresConnectionSecret := .observed.composite.resource.spec.parameters.database.postgresParameters.name }}
-            {{ range .observed.composite.resource.spec.parameters.database.databaseSchemas }}
+            {{ $postgresConnectionSecret := .observed.composite.resource.spec.database.postgresParameters.name }}
+            {{ range .observed.composite.resource.spec.database.databaseSchemas }}
             ---
             apiVersion: kubernetes.crossplane.io/v1alpha2
             kind: Object
             metadata:
               name: '{{ .name }}'
               labels: {{ toYaml $ocr.metadata.labels | nindent 4 }}
-              annotations:
+              annotations: {{ toYaml $ocr.metadata.annotations | nindent 4 }}
                 crossplane.io/external-name: '{{ .name }}'
                 gotemplating.fn.crossplane.io/composition-resource-name: '{{ .name }}'
             spec:
               providerConfigRef:
-                name: {{ $ocr.spec.parameters.providerConfigName }}
+                name: {{ $ocr.spec.providerConfigName }}
               forProvider:
                 manifest:
                   apiVersion: db.atlasgo.io/v1alpha1
                   kind: AtlasSchema
                   metadata:
                     name: '{{ .name }}'
+                    namespace: '{{ $ocr.metadata.namespace }}'
+                    annotations: {{ toYaml $ocr.metadata.annotations | nindent 10 }}
                   spec:
                     credentials:
                       scheme: postgres
@@ -181,7 +183,7 @@ spec:
                         secretKeyRef:
                           key: password
                           name: '{{ $postgresConnectionSecret }}-connection'
-                      database: upbound #TODO: check if valid
+                      database: upbound
                       port: 5432
                       parameters:
                         sslmode: disable
@@ -202,20 +204,20 @@ spec:
         inline:
           template: |
             {{ $ocr := .observed.composite.resource }}
-            {{ $backend := .observed.composite.resource.spec.parameters.backend }}
-            {{ $postgresConnectionSecret := .observed.composite.resource.spec.parameters.database.postgresParameters.name }}
+            {{ $backend := .observed.composite.resource.spec.backend }}
+            {{ $postgresConnectionSecret := .observed.composite.resource.spec.database.postgresParameters.name }}
             ---
             apiVersion: kubernetes.crossplane.io/v1alpha2
             kind: Object
             metadata:
               name: '{{ $ocr.metadata.name }}-deployment'
               labels: {{ toYaml $ocr.metadata.labels | nindent 4 }}
-              annotations:
+              annotations: {{ toYaml $ocr.metadata.annotations | nindent 4 }}
                 crossplane.io/external-name: '{{ $ocr.metadata.name }}-deployment'
                 gotemplating.fn.crossplane.io/composition-resource-name: '{{ $ocr.metadata.name }}-deployment'
             spec:
               providerConfigRef:
-                name: {{ $ocr.spec.parameters.providerConfigName }}
+                name: {{ $ocr.spec.providerConfigName }}
               forProvider:
                 manifest:
                   apiVersion: apps/v1
@@ -223,17 +225,17 @@ spec:
                   metadata:
                     name: '{{ $ocr.metadata.name }}'
                     namespace: '{{ $ocr.metadata.namespace }}'
-                    labels: {{ toYaml $ocr.metadata.labels | nindent 10 }}
+                    labels:
                       app: '{{ $ocr.metadata.name }}'
                     annotations: {{ toYaml $ocr.metadata.annotations | nindent 10 }}
                   spec:
                     replicas: 3
                     selector:
-                      matchLabels: {{ toYaml $ocr.metadata.labels | nindent 12 }}
+                      matchLabels:
                         app: '{{ $ocr.metadata.name }}'
                     template:
                       metadata:
-                        labels: {{ toYaml $ocr.metadata.labels | nindent 14 }}
+                        labels:
                           app: '{{ $ocr.metadata.name }}'
                         annotations: {{ toYaml $ocr.metadata.annotations | nindent 14 }}
                       spec:
@@ -260,7 +262,7 @@ spec:
                                 value: password
                           - name: POSTGRES_DB
                             value: upbound
-                          {{ with $ocr.spec.parameters.secrets.externalSecrets }}
+                          {{ with $ocr.spec.secrets.externalSecrets }}
                           envFrom:
                           {{ range . }}
                           - secretRef:
@@ -273,12 +275,12 @@ spec:
             metadata:
               name: '{{ $ocr.metadata.name }}-svc'
               labels: {{ toYaml $ocr.metadata.labels | nindent 4 }}
-              annotations:
+              annotations: {{ toYaml $ocr.metadata.annotations | nindent 4 }}
                 crossplane.io/external-name: '{{ $ocr.metadata.name }}-svc'
                 gotemplating.fn.crossplane.io/composition-resource-name: '{{ $ocr.metadata.name }}-svc'
             spec:
               providerConfigRef:
-                name: {{ $ocr.spec.parameters.providerConfigName }}
+                name: {{ $ocr.spec.providerConfigName }}
               forProvider:
                 manifest:
                   apiVersion: v1
@@ -286,11 +288,11 @@ spec:
                   metadata:
                     name: '{{ $ocr.metadata.name }}'
                     namespace: '{{ $ocr.metadata.namespace }}'
-                    labels: {{ toYaml $ocr.metadata.labels | nindent 10 }}
+                    labels:
                       app: '{{ $ocr.metadata.name }}'
                     annotations: {{ toYaml $ocr.metadata.annotations | nindent 10 }}
                   spec:
-                    selector: {{ toYaml $ocr.metadata.labels | nindent 10 }}
+                    selector:
                       app: '{{ $ocr.metadata.name }}'
                     ports:
                       - protocol: TCP
@@ -302,18 +304,20 @@ spec:
             metadata:
               name: '{{ $ocr.metadata.name }}-ingress'
               labels: {{ toYaml $ocr.metadata.labels | nindent 4 }}
-              annotations:
+              annotations: {{ toYaml $ocr.metadata.annotations | nindent 4 }}
                 crossplane.io/external-name: '{{ $ocr.metadata.name }}-ingress'
                 gotemplating.fn.crossplane.io/composition-resource-name: '{{ $ocr.metadata.name }}-ingress'
             spec:
               providerConfigRef:
-                name: {{ $ocr.spec.parameters.providerConfigName }}
+                name: {{ $ocr.spec.providerConfigName }}
               forProvider:
                 manifest:
                   apiVersion: networking.k8s.io/v1
                   kind: Ingress
                   metadata:
                     name: '{{ $ocr.metadata.name }}'
+                    namespace: '{{ $ocr.metadata.namespace }}'
+                    annotations: {{ toYaml $ocr.metadata.annotations | nindent 10 }}
                   spec:
                     rules:
                     - http:

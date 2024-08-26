@@ -171,7 +171,7 @@ spec:
                           name: '{{ $postgresConnectionSecret }}-connection'
                       userFrom:
                         secretKeyRef:
-                          key: user
+                          key: username
                           name: '{{ $postgresConnectionSecret }}-connection'
                       passwordFrom:
                         secretKeyRef:
@@ -241,17 +241,17 @@ spec:
                             valueFrom:
                               secretKeyRef:
                                 name: '{{ $postgresConnectionSecret }}-connection'
-                                value: user
+                                key: username
                           - name: POSTGRES_HOST
                             valueFrom:
                               secretKeyRef:
                                 name: '{{ $postgresConnectionSecret }}-connection'
-                                value: host
+                                key: host
                           - name: POSTGRES_PASSWORD
                             valueFrom:
                               secretKeyRef:
                                 name: '{{ $postgresConnectionSecret }}-connection'
-                                value: password
+                                key: password
                           - name: POSTGRES_DB
                             value: upbound
                           {{ with $ocr.spec.secrets.externalSecrets }}

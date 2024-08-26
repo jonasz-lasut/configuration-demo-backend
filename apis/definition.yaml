@@ -63,7 +63,7 @@ spec:
                           description: VPC network name
                         region:
                           type: string
-                          default: europe-central2
+                          default: europe-west2
                       required:
                         - externalSecret
                         - name

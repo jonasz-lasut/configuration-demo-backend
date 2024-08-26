@@ -1,7 +1,7 @@
 apiVersion: application.jlasut.io/v1alpha1
 kind: DemoBackend
 metadata:
-  namespace: default
+  namespace: todo-app
   name: demo-backend
 spec:
   providerConfigName: provider-example
@@ -13,7 +13,6 @@ spec:
   database:
     postgresParameters:
       name: demo-postgres
-      region: europe-central2
       network: <vpc-network>
       externalSecret: postgres-password
     databaseSchemas:
@@ -27,6 +26,6 @@ spec:
   secrets: 
     secretStoreName: external-secret-store
     externalSecrets:
-    - fromSecret: external-secret
-      toSecret: local-secret
+    - fromSecret: todo-demo-backend
+      toSecret: todo-configuration
       version: latest

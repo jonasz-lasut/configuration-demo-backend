@@ -192,3 +192,136 @@ spec:
                         destructive:
                           error: true
             {{ end }}
+    - functionRef:
+        name: crossplane-contrib-function-go-templating
+      step: create-backend
+      input:
+        apiVersion: gotemplating.fn.crossplane.io/v1beta1
+        kind: GoTemplate
+        source: Inline
+        inline:
+          template: |
+            {{ $ocr := .observed.composite.resource }}
+            {{ $backend := .observed.composite.resource.spec.parameters.backend }}
+            {{ $postgresConnectionSecret := .observed.composite.resource.spec.parameters.database.postgresParameters.name }}
+            ---
+            apiVersion: kubernetes.crossplane.io/v1alpha2
+            kind: Object
+            metadata:
+              name: '{{ $ocr.metadata.name }}-deployment'
+              labels: {{ toYaml $ocr.metadata.labels | nindent 4 }}
+              annotations:
+                crossplane.io/external-name: '{{ $ocr.metadata.name }}-deployment'
+                gotemplating.fn.crossplane.io/composition-resource-name: '{{ $ocr.metadata.name }}-deployment'
+            spec:
+              providerConfigRef:
+                name: {{ $ocr.spec.parameters.providerConfigName }}
+              forProvider:
+                manifest:
+                  apiVersion: apps/v1
+                  kind: Deployment
+                  metadata:
+                    name: '{{ $ocr.metadata.name }}'
+                    namespace: '{{ $ocr.metadata.namespace }}'
+                    labels: {{ toYaml $ocr.metadata.labels | nindent 10 }}
+                      app: '{{ $ocr.metadata.name }}'
+                    annotations: {{ toYaml $ocr.metadata.annotations | nindent 10 }}
+                  spec:
+                    replicas: 3
+                    selector:
+                      matchLabels: {{ toYaml $ocr.metadata.labels | nindent 12 }}
+                        app: '{{ $ocr.metadata.name }}'
+                    template:
+                      metadata:
+                        labels: {{ toYaml $ocr.metadata.labels | nindent 14 }}
+                          app: '{{ $ocr.metadata.name }}'
+                        annotations: {{ toYaml $ocr.metadata.annotations | nindent 14 }}
+                      spec:
+                        containers:
+                        - name: backend
+                          image: '{{ $backend.image }}'
+                          ports:
+                          - containerPort: {{ $backend.port }}
+                          env:
+                          - name: POSTGRES_USER
+                            valueFrom:
+                              secretKeyRef:
+                                name: '{{ $postgresConnectionSecret }}-connection'
+                                value: user
+                          - name: POSTGRES_HOST
+                            valueFrom:
+                              secretKeyRef:
+                                name: '{{ $postgresConnectionSecret }}-connection'
+                                value: host
+                          - name: POSTGRES_PASSWORD
+                            valueFrom:
+                              secretKeyRef:
+                                name: '{{ $postgresConnectionSecret }}-connection'
+                                value: password
+                          - name: POSTGRES_DB
+                            value: upbound
+                          {{ with $ocr.spec.parameters.secrets.externalSecrets }}
+                          envFrom:
+                          {{ range . }}
+                          - secretRef:
+                              name: {{ .toSecret }}
+                          {{ end }}
+                          {{ end }}
+            ---
+            apiVersion: kubernetes.crossplane.io/v1alpha2
+            kind: Object
+            metadata:
+              name: '{{ $ocr.metadata.name }}-svc'
+              labels: {{ toYaml $ocr.metadata.labels | nindent 4 }}
+              annotations:
+                crossplane.io/external-name: '{{ $ocr.metadata.name }}-svc'
+                gotemplating.fn.crossplane.io/composition-resource-name: '{{ $ocr.metadata.name }}-svc'
+            spec:
+              providerConfigRef:
+                name: {{ $ocr.spec.parameters.providerConfigName }}
+              forProvider:
+                manifest:
+                  apiVersion: v1
+                  kind: Service
+                  metadata:
+                    name: '{{ $ocr.metadata.name }}'
+                    namespace: '{{ $ocr.metadata.namespace }}'
+                    labels: {{ toYaml $ocr.metadata.labels | nindent 10 }}
+                      app: '{{ $ocr.metadata.name }}'
+                    annotations: {{ toYaml $ocr.metadata.annotations | nindent 10 }}
+                  spec:
+                    selector: {{ toYaml $ocr.metadata.labels | nindent 10 }}
+                      app: '{{ $ocr.metadata.name }}'
+                    ports:
+                      - protocol: TCP
+                        port: {{ $backend.port }}
+                        targetPort: {{ $backend.port }}
+            ---
+            apiVersion: kubernetes.crossplane.io/v1alpha2
+            kind: Object
+            metadata:
+              name: '{{ $ocr.metadata.name }}-ingress'
+              labels: {{ toYaml $ocr.metadata.labels | nindent 4 }}
+              annotations:
+                crossplane.io/external-name: '{{ $ocr.metadata.name }}-ingress'
+                gotemplating.fn.crossplane.io/composition-resource-name: '{{ $ocr.metadata.name }}-ingress'
+            spec:
+              providerConfigRef:
+                name: {{ $ocr.spec.parameters.providerConfigName }}
+              forProvider:
+                manifest:
+                  apiVersion: networking.k8s.io/v1
+                  kind: Ingress
+                  metadata:
+                    name: '{{ $ocr.metadata.name }}'
+                  spec:
+                    rules:
+                    - http:
+                        paths:
+                        - path: /
+                          pathType: Prefix
+                          backend:
+                            service:
+                              name: '{{ $ocr.metadata.name }}'
+                              port:
+                                number: {{ $backend.port }}

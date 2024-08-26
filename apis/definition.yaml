@@ -36,10 +36,16 @@ spec:
                   type: object
                   description: Backend configuration
                   properties:
-                    placeholder:
+                    image:
+                      type: string
+                    port:
+                      type: integer
+                    hostname:
                       type: string
                   required:
-                    - placeholder
+                    - image
+                    - hostname
+                    - port
                 database:
                   type: object
                   description: Database configuration
@@ -57,7 +63,7 @@ spec:
                           description: VPC network name
                         region:
                           type: string
-                          default: europe-central2 #TODO; check
+                          default: europe-central2
                       required:
                         - externalSecret
                         - name

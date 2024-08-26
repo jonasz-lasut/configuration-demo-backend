@@ -10,10 +10,11 @@ use crate::handlers;
 #[derive(Clone)]
 pub struct Repository {
     pub pool: PgPool,
+    pub title: String,
 }
 
-pub fn init_router(db: PgPool) -> Router {
-    let state = Repository { pool: db };
+pub fn init_router(db: PgPool, app_name: String) -> Router {
+    let state = Repository { pool: db, title: app_name };
 
     Router::new()
         .route("/", get(handlers::home))

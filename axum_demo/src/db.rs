@@ -1,12 +1,14 @@
 use sqlx::postgres::PgPoolOptions;
 use sqlx::PgPool;
 
+use crate::helpers::get_env;
+
 pub async fn initialize_pgpool() -> PgPool {
-    let pg_host = std::env::var("POSTGRES_HOST").expect("No POSTGRES_HOST variable provided");
-    let pg_user = std::env::var("POSTGRES_USER").expect("No POSTGRES_USER variable provided");
+    let pg_host = get_env("POSTGRES_HOST");
+    let pg_user = get_env("POSTGRES_USER");
     let pg_password =
-        std::env::var("POSTGRES_PASSWORD").expect("No POSTGRES_PASSWORD variable provided");
-    let pg_db = std::env::var("POSTGRES_DB").expect("No POSTGRES_DB variable provided");
+        get_env("POSTGRES_PASSWORD");
+    let pg_db = get_env("POSTGRES_DB");
 
     PgPoolOptions::new()
         .max_connections(5)

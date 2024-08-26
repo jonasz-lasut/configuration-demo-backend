@@ -4,7 +4,9 @@ use crate::models;
 
 #[derive(Template)]
 #[template(path = "layout/index.html")]
-pub struct HelloTemplate;
+pub struct HelloTemplate {
+    pub title: String
+}
 
 #[derive(Template)]
 #[template(path = "todos/todos.html")]

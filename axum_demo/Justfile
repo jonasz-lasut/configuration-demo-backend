@@ -1,5 +1,7 @@
 set shell := ["bash", "-c"]
 
+app_name := "Todo App"
+
 pg_container := "todo-postgres"
 pg_db := "upbound"
 pg_user := "todo"
@@ -20,7 +22,7 @@ teardown_db:
   if docker ps | grep -q {{ pg_container }}; then docker stop {{ pg_container }}; fi
 
 start_api:
-  POSTGRES_HOST=127.0.0.1 POSTGRES_DB={{ pg_db }} POSTGRES_USER={{ pg_user }} POSTGRES_PASSWORD={{ pg_password }} cargo run
+  POSTGRES_HOST=127.0.0.1 POSTGRES_DB="{{ pg_db }}" POSTGRES_USER="{{ pg_user }}" POSTGRES_PASSWORD="{{ pg_password }}" APPLICATION_NAME="{{ app_name }}" cargo run
 
 generate_css:
   #!/usr/bin/env bash

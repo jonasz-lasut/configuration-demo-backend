@@ -11,8 +11,8 @@ use crate::models::{GenericResponse, Todo, TodoNew, TodoUpdate};
 use crate::router::Repository;
 use crate::templates;
 
-pub async fn home() -> impl IntoResponse {
-    templates::HelloTemplate
+pub async fn home(State(state): State<Repository>) -> impl IntoResponse {
+    templates::HelloTemplate { title: state.title }
 }
 
 pub async fn healthz() -> Result<impl IntoResponse, ()> {
@@ -57,7 +57,7 @@ pub async fn create_todo(
     .fetch_one(&state.pool)
     .await?;
 
-    Ok(templates::HelloTemplate)
+    Ok(templates::HelloTemplate { title: state.title })
 }
 
 pub async fn delete_todo(
@@ -69,7 +69,7 @@ pub async fn delete_todo(
         .execute(&state.pool)
         .await?;
 
-    Ok(templates::HelloTemplate)
+    Ok(templates::HelloTemplate { title: state.title })
 }
 
 pub async fn handler_404() -> impl IntoResponse {
@@ -87,7 +87,7 @@ pub async fn todo_update_handler(
         .fetch_one(&state.pool)
         .await?;
 
-    Ok(templates::TodoUpdateModalTemplate { todo: todo })
+    Ok(templates::TodoUpdateModalTemplate { todo })
 }
 
 pub async fn update_todo(
@@ -102,5 +102,5 @@ pub async fn update_todo(
         .execute(&state.pool)
         .await?;
 
-    Ok(templates::HelloTemplate)
+    Ok(templates::HelloTemplate { title: state.title })
 }

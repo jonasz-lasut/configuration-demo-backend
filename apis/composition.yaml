@@ -1,7 +1,7 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-  name: xdemobackend.application.jlasut.io
+  name: xdemobackends.application.jlasut.io
 spec:
   compositeTypeRef:
     apiVersion: application.jlasut.io/v1alpha1

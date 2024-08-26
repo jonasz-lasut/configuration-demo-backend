@@ -3,6 +3,10 @@
 /_output
 /results
 /.idea
+/.devbox
 
 *.xpkg
 kubeconfig
+
+target/
+node_modules/

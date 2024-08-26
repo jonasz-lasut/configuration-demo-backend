@@ -6,7 +6,10 @@ metadata:
 spec:
   providerConfigName: provider-example
   deletionPolicy: Delete
-  backend: {}
+  backend:
+    image: 'ttl.sh/axum_demo_todo:6h'
+    port: 8080
+    hostname: demobackend.127.0.0.1.nip.io
   database:
     postgresParameters:
       name: demo-postgres
@@ -14,13 +17,12 @@ spec:
       network: <vpc-network>
       externalSecret: postgres-password
     databaseSchemas:
-    - name: default-schema
+    - name: todos-schema
       sql: |
-        create table users (
-          id int not null auto_increment,
-          name varchar(255) not null,
-          email varchar(255) unique not null,
-          primary key (id)
+        create table todos (
+          id SERIAL PRIMARY KEY,
+          note VARCHAR(255) NOT NULL,
+          status BOOLEAN NOT NULL DEFAULT false,
         );
   secrets: 
     secretStoreName: external-secret-store
@@ -28,5 +30,3 @@ spec:
     - fromSecret: external-secret
       toSecret: local-secret
       version: latest
-
-

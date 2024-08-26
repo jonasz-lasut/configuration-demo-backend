@@ -2,9 +2,13 @@ apiVersion: application.jlasut.io/v1alpha1
 kind: DemoBackend
 metadata:
   namespace: todo-app
-  name: demo-backend
+  name: emerging-tech-todo-demo
+  annotations:
+    argocd.argoproj.io/tracking-id: crossplane-infrastructure:application.jlasut.io/DemoBackend:todo-app/emerging-tech-todo-demo
+  labels:
+    env: demo
 spec:
-  providerConfigName: provider-example
+  providerConfigName: emerging-tech-provider
   deletionPolicy: Delete
   backend:
     image: 'ttl.sh/axum_demo_todo:6h'
@@ -12,9 +16,9 @@ spec:
     hostname: demobackend.127.0.0.1.nip.io
   database:
     postgresParameters:
-      name: demo-postgres
-      network: <vpc-network>
-      externalSecret: postgres-password
+      name: emerging-tech-postgres
+      network: emerging-tech-network
+      externalSecret: todo-postgres-password
     databaseSchemas:
     - name: todos-schema
       sql: |

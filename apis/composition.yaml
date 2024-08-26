@@ -28,6 +28,7 @@ spec:
               annotations:
                 crossplane.io/external-name: '{{ .toSecret }}'
                 gotemplating.fn.crossplane.io/composition-resource-name: '{{ .toSecret }}-secret'
+                {{ toYaml $ocr.metadata.annotations | nindent 4 }}
             spec:
               providerConfigRef:
                 name: {{ $ocr.spec.providerConfigName }}
@@ -73,9 +74,10 @@ spec:
             metadata:
               name: '{{ $postgres.externalSecret }}'
               labels: {{ toYaml $ocr.metadata.labels | nindent 4 }}
-              annotations: {{ toYaml $ocr.metadata.annotations | nindent 4 }}
+              annotations:
                 crossplane.io/external-name: '{{ $postgres.externalSecret }}'
                 gotemplating.fn.crossplane.io/composition-resource-name: '{{ $postgres.externalSecret }}'
+                {{ toYaml $ocr.metadata.annotations | nindent 4 }}
             spec:
               providerConfigRef:
                 name: {{ $ocr.spec.providerConfigName }}
@@ -106,9 +108,10 @@ spec:
             metadata:
               name: '{{ $postgres.name }}'
               labels: {{ toYaml $ocr.metadata.labels | nindent 4 }}
-              annotations: {{ toYaml $ocr.metadata.annotations | nindent 4 }}
+              annotations:
                 crossplane.io/external-name: '{{ $postgres.name }}'
                 gotemplating.fn.crossplane.io/composition-resource-name: '{{ $postgres.name }}-postgres'
+                {{ toYaml $ocr.metadata.annotations | nindent 4 }}
             spec:
               providerConfigRef:
                 name: {{ $ocr.spec.providerConfigName }}
@@ -154,9 +157,10 @@ spec:
             metadata:
               name: '{{ .name }}'
               labels: {{ toYaml $ocr.metadata.labels | nindent 4 }}
-              annotations: {{ toYaml $ocr.metadata.annotations | nindent 4 }}
+              annotations:
                 crossplane.io/external-name: '{{ .name }}'
                 gotemplating.fn.crossplane.io/composition-resource-name: '{{ .name }}'
+                {{ toYaml $ocr.metadata.annotations | nindent 4 }}
             spec:
               providerConfigRef:
                 name: {{ $ocr.spec.providerConfigName }}
@@ -187,12 +191,12 @@ spec:
                       port: 5432
                       parameters:
                         sslmode: disable
-                    schema:
-                      sql: {{ .sql }}
                     policy:
                       lint:
                         destructive:
                           error: true
+                    schema:
+                      sql: | {{ .sql | nindent 12 }}
             {{ end }}
     - functionRef:
         name: crossplane-contrib-function-go-templating
@@ -212,9 +216,10 @@ spec:
             metadata:
               name: '{{ $ocr.metadata.name }}-deployment'
               labels: {{ toYaml $ocr.metadata.labels | nindent 4 }}
-              annotations: {{ toYaml $ocr.metadata.annotations | nindent 4 }}
+              annotations:
                 crossplane.io/external-name: '{{ $ocr.metadata.name }}-deployment'
                 gotemplating.fn.crossplane.io/composition-resource-name: '{{ $ocr.metadata.name }}-deployment'
+                {{ toYaml $ocr.metadata.annotations | nindent 4 }}
             spec:
               providerConfigRef:
                 name: {{ $ocr.spec.providerConfigName }}
@@ -275,9 +280,10 @@ spec:
             metadata:
               name: '{{ $ocr.metadata.name }}-svc'
               labels: {{ toYaml $ocr.metadata.labels | nindent 4 }}
-              annotations: {{ toYaml $ocr.metadata.annotations | nindent 4 }}
+              annotations:
                 crossplane.io/external-name: '{{ $ocr.metadata.name }}-svc'
                 gotemplating.fn.crossplane.io/composition-resource-name: '{{ $ocr.metadata.name }}-svc'
+                {{ toYaml $ocr.metadata.annotations | nindent 4 }}
             spec:
               providerConfigRef:
                 name: {{ $ocr.spec.providerConfigName }}
@@ -304,9 +310,10 @@ spec:
             metadata:
               name: '{{ $ocr.metadata.name }}-ingress'
               labels: {{ toYaml $ocr.metadata.labels | nindent 4 }}
-              annotations: {{ toYaml $ocr.metadata.annotations | nindent 4 }}
+              annotations:
                 crossplane.io/external-name: '{{ $ocr.metadata.name }}-ingress'
                 gotemplating.fn.crossplane.io/composition-resource-name: '{{ $ocr.metadata.name }}-ingress'
+                {{ toYaml $ocr.metadata.annotations | nindent 4 }}
             spec:
               providerConfigRef:
                 name: {{ $ocr.spec.providerConfigName }}

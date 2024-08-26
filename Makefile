@@ -67,7 +67,7 @@ uptest: $(UPTEST) $(KUBECTL) $(KUTTL)
 e2e: build controlplane.up local.xpkg.deploy.configuration.$(PROJECT_NAME) uptest
 
 render:
-	crossplane beta render examples/atlas-xr.yaml apis/composition.yaml examples/functions.yaml -r
+	crossplane beta render examples/claim.yaml apis/composition.yaml examples/functions.yaml -r
 
 yamllint:
 	@$(INFO) running yamllint

@@ -12,7 +12,7 @@ pub struct TodoNew {
 pub struct Todo {
     pub id: i32,
     pub note: String,
-    pub status: bool
+    pub status: bool,
 }
 
 #[derive(Deserialize)]
@@ -20,7 +20,7 @@ pub struct TodoUpdate {
     pub note: String,
     #[serde(default)]
     #[serde(deserialize_with = "deserialize_checkbox")]
-    pub status: bool
+    pub status: bool,
 }
 
 #[derive(Serialize)]

@@ -230,7 +230,6 @@ spec:
                       metadata:
                         labels:
                           app: '{{ $ocr.metadata.name }}'
-                        annotations: {{ toYaml $ocr.metadata.annotations | nindent 14 }}
                       spec:
                         containers:
                         - name: backend

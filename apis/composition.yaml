@@ -38,7 +38,6 @@ spec:
                   metadata:
                     name: '{{ .toSecret }}'
                     namespace: '{{ index $ocr.metadata.labels "crossplane.io/claim-namespace" }}'
-
                   spec:
                     refreshInterval: '1h'
                     secretStoreRef:
@@ -320,3 +319,6 @@ spec:
                               name: '{{ $ocr.metadata.name }}'
                               port:
                                 number: {{ $backend.port }}
+    - functionRef:
+        name: crossplane-contrib-function-auto-ready
+      step: automatically-detect-ready-composed-resources
